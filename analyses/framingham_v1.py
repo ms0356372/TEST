@@ -54,7 +54,7 @@ def calculate_total_risk(sex:str,score:int|None)->str|None:
     return None
 
 def calculate_age_incidence(sex:str,age:int|None)->str|None:
-    if age is None or age<30 or age>100:return None
+    if age is None or age<0 or age>100:return None
     table=((34,"2%"),(39,"3%"),(49,"4%"),(54,"6%"),(59,"7%"),(64,"9%"),(69,"11%"),(100,"14%")) if sex=="男" else ((34,"<1%"),(39,"1%"),(44,"2%"),(49,"3%"),(54,"5%"),(59,"7%"),(100,"8%")) if sex=="女" else ()
     for upper,result in table:
         if age<=upper:return result

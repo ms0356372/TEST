@@ -1,9 +1,40 @@
 @echo off
-setlocal
 cd /d "%~dp0"
+
+echo Checking Python...
+py --version
+if errorlevel 1 goto NO_PYTHON
+
+echo Installing requirements...
+if exist requirements.txt py -m pip install -r requirements.txt
+
+echo Installing PyInstaller...
+py -m pip install pyinstaller
+
+echo Cleaning old files...
 if exist build rmdir /s /q build
 if exist dist rmdir /s /q dist
-python -m PyInstaller --onefile --noconsole --clean --name "Excel健檢分析工具" main.py
-if errorlevel 1 (echo 打包失敗 & pause & exit /b 1)
-echo 完成：dist\Excel健檢分析工具.exe
+
+echo Building EXE...
+py -m PyInstaller --onefile --noconsole --clean --name ExcelHealthTool main.py
+
+if errorlevel 1 goto BUILD_ERROR
+
+echo.
+echo BUILD SUCCESS
+echo EXE: dist\ExcelHealthTool.exe
+echo.
 pause
+exit /b 0
+
+:NO_PYTHON
+echo.
+echo Python launcher "py" was not found.
+pause
+exit /b 1
+
+:BUILD_ERROR
+echo.
+echo BUILD FAILED
+pause
+exit /b 1

@@ -22,7 +22,11 @@ class Scores(unittest.TestCase):
   female=list(range(-2,18)); exp=["1%","2%","2%","2%","3%","3%","4%","4%","5%","6%","7%","8%","10%","11%","13%","15%","18%","20%","24%","≥27%"]
   self.assertEqual([calculate_total_risk("女",x) for x in female],exp)
  def test_incidence_levels_comparison(self):
-  self.assertEqual(calculate_age_incidence("女",30),"<1%");self.assertEqual(calculate_age_incidence("男",70),"14%")
+  for age in (0, 1, 29, 30, 34):
+   with self.subTest(sex="男", age=age):self.assertEqual(calculate_age_incidence("男",age),"2%")
+   with self.subTest(sex="女", age=age):self.assertEqual(calculate_age_incidence("女",age),"<1%")
+  self.assertEqual(calculate_age_incidence("男",70),"14%")
+  self.assertIsNone(calculate_age_incidence("男",-1));self.assertIsNone(calculate_age_incidence("女",101))
   self.assertEqual([calculate_risk_level(x) for x in ["9%","10%","20%","21%","30%","31%"]],["低度","中度","中度","高度","高度","極高"])
   pairs=[("2%","3%","較低"),("3%","3%","一樣"),("4%","3%","較高"),("1%","<1%","較高"),("2%","<1%","較高"),("≥53%","≥27%","較高")]
   for a,b,c in pairs:self.assertEqual(compare_with_age_incidence(a,b),c)

@@ -24,7 +24,28 @@ python -m compileall -q .
 
 ## 打包 Windows EXE
 
-先安裝 `python -m pip install pyinstaller`，再雙擊 `build_exe.bat`。腳本使用 `--onefile --noconsole`，成品位於 `dist/Excel健檢分析工具.exe`，目標電腦不需 Python。
+專案同時支援本機打包與 GitHub Actions 雲端打包；兩種方式皆使用 `--onefile --noconsole`，產生不顯示命令提示字元視窗的單一 EXE。
+
+### 方法一：Windows 本機打包
+
+1. 安裝含 `py` launcher 的 Python。
+2. 雙擊專案根目錄的 `build_exe.bat`；腳本會檢查 Python，並自動安裝 `requirements.txt` 與 PyInstaller。
+3. 打包完成後，成品位於 `dist/ExcelHealthTool.exe`。
+
+### 方法二：使用 GitHub Actions 打包
+
+Workflow 位於 `.github/workflows/build-windows-exe.yml`，會在 push 到 `main` 時自動執行，也可手動執行：
+
+1. 開啟 GitHub repository 頁面。
+2. 點選頁面上方的 **Actions**。
+3. 在左側選擇 **Build Windows EXE**。
+4. 點選 **Run workflow**，選擇 `main` 分支後，再按一次綠色的 **Run workflow**。
+5. 等待工作流程中的依賴安裝、測試與 PyInstaller 打包步驟全部完成並顯示綠色勾號。
+6. 點入已完成的 workflow run，捲動至頁面下方的 **Artifacts** 區域。
+7. 點選 **Excel健檢分析工具-Windows** 下載 Artifact ZIP。
+8. 解壓縮後即可取得 `Excel健檢分析工具.exe`。
+
+GitHub Actions 使用 `windows-latest` 與 Python 3.12；只有所有測試成功後才會打包及上傳 Artifact。Artifact 預設保留 30 天。目標 Windows 電腦不需安裝 Python。
 
 ## 專案架構
 
