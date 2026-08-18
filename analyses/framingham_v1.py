@@ -7,6 +7,7 @@ from core.excel_writer import write_analysis_workbook
 from core.exceptions import AnalysisError
 from core.models import FraminghamInput, FraminghamResult
 from core.utils import calculate_age, safe_number, unique_output_path
+from core.validator import validate_excel_input, validate_output_directory
 
 OUTPUT_HEADERS=("員工編號","員工姓名","廠區","部門","性別","年齡","收縮壓","舒張壓","膽固醇","高密度脂蛋白","抽煙","糖尿病","年齡(分數)","血壓","膽固醇","高密度脂蛋白(分數)","抽煙(分數)","糖尿病(分數)","總分","總風險機率","同年齡發生率","評估十年內風險程度","相較同年齡發生率")
 REQUIRED_HEADERS=("工號","姓名","廠別","部門","性別","*收縮壓","*舒張壓","*膽固醇","HDL-C","*抽菸","既往病史")
@@ -78,9 +79,12 @@ def analyze_record(source:FraminghamInput)->FraminghamResult:
 class FraminghamV1Analysis(BaseAnalysis):
     key="framingham_v1"; name="心血管風險(佛萊明罕第一版)"; required_templates=("總表",); required_headers=REQUIRED_HEADERS; output_headers=OUTPUT_HEADERS
     def run(self,templates:dict[str,str],output_dir:str,log:LogCallback=lambda _:None,progress:ProgressCallback=lambda _a,_b:None)->Path:
-        path=templates.get("總表");
-        if not path: raise AnalysisError("沒有選擇總表。")
-        headers,rows=read_active_sheet(path); missing=[h for h in REQUIRED_HEADERS if h not in headers]
+        path=templates.get("總表")
+        if not path:
+            raise AnalysisError("沒有選擇總表。")
+        source_path = validate_excel_input(path, "總表")
+        output_path = validate_output_directory(output_dir)
+        headers,rows=read_active_sheet(source_path); missing=[h for h in REQUIRED_HEADERS if h not in headers]
         if missing: raise AnalysisError("總表缺少必要表頭："+"、".join(missing))
         if "年齡" not in headers and "出生年月" not in headers: raise AnalysisError("總表缺少「年齡」及「出生年月」，無法計算年齡。")
         results=[]; total=len(rows); log(f"總資料筆數：{total}")
@@ -96,4 +100,4 @@ class FraminghamV1Analysis(BaseAnalysis):
             result=analyze_record(inp); results.append(result)
             if result.total_score is None:log(f"第 {index} 列：評分資料不完整，總分及依賴欄位留空。")
             progress(len(results),total)
-        target=unique_output_path(output_dir,"心血管風險_佛萊明罕第一版"); write_analysis_workbook(target,OUTPUT_HEADERS,[r.as_row() for r in results]); return target
+        target=unique_output_path(output_path,"心血管風險_佛萊明罕第一版"); write_analysis_workbook(target,OUTPUT_HEADERS,[r.as_row() for r in results]); return target
