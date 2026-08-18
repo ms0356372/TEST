@@ -1,0 +1,2 @@
+openpyxl>=3.1,<4
+# 開發／打包：pyinstaller>=6,<7
