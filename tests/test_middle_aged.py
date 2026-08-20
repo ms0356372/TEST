@@ -6,7 +6,7 @@ from analyses.middle_aged import (
     calculate_question6_score, calculate_question7_score, calculate_roc_age,
     calculate_total_score, calculate_work_ability_level, calculate_work_ability_meaning,
     calculate_work_ability_measure, count_disease_items, extract_question1_score,
-    MiddleAgedAnalysis, find_unique_header_containing,
+    MiddleAgedAnalysis, extract_disease_matchable_segments, find_unique_header_containing,
 )
 from core.exceptions import AnalysisError
 
@@ -51,6 +51,39 @@ class MiddleAgedScoringTests(unittest.TestCase):
                 find_unique_header_containing(["工號", keyword + "(A)", keyword + "(B)"], keyword, logs.append)
             self.assertTrue(any("B欄" in message and "(A)" in message for message in logs))
             self.assertTrue(any("C欄" in message and "(B)" in message for message in logs))
+
+    def test_full_width_colon_preprocessing(self):
+        skin = DISEASE_HEADERS[8]
+        cardiovascular = DISEASE_HEADERS[2]
+        metabolic = DISEASE_HEADERS[10]
+        other = DISEASE_HEADERS[13]
+
+        skin_answer = "其他皮膚疾病：12、過敏性皮疹或紅斑、其他疹子：12"
+        self.assertEqual(
+            extract_disease_matchable_segments(skin_answer),
+            ["其他皮膚疾病", "過敏性皮疹或紅斑", "其他疹子"],
+        )
+        self.assertEqual(count_disease_items({skin: skin_answer}), 3)
+        self.assertEqual(count_disease_items({cardiovascular: "高血壓：控制中、冠狀動脈心臟病"}), 2)
+
+        # 冒號後的糖尿病不判讀；下一個「、」後重新恢復判讀。
+        excluded = "其他問題或疾病：糖尿病、高血壓"
+        self.assertEqual(extract_disease_matchable_segments(excluded), ["其他問題或疾病", "高血壓"])
+        self.assertEqual(count_disease_items({metabolic: excluded}), 0)
+        restored = "其他問題或疾病：糖尿病、糖尿病"
+        self.assertEqual(extract_disease_matchable_segments(restored), ["其他問題或疾病", "糖尿病"])
+        self.assertEqual(count_disease_items({metabolic: restored}), 1)
+        self.assertEqual(
+            count_disease_items({
+                skin: "其他皮膚疾病：abc、其他疹子：高血壓、過敏性皮疹或紅斑",
+                cardiovascular: "",
+            }),
+            3,
+        )
+        self.assertEqual(count_disease_items({skin: "過敏性皮疹或紅斑、其他疹子"}), 2)
+        self.assertEqual(extract_disease_matchable_segments(""), [])
+        self.assertEqual(extract_disease_matchable_segments(None), [])
+        self.assertEqual(count_disease_items({skin: None, other: ""}), 0)
 
     def test_updated_keyword_substrings_and_duplicates(self):
         cases = [

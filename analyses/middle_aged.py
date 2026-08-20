@@ -130,9 +130,26 @@ def calculate_question2_score(answer_i: Any, answer_j: Any) -> int | None:
     return first + second if first is not None and second is not None else None
 
 
+def extract_disease_matchable_segments(value: Any) -> list[str]:
+    """Return 「、」 items with full-width-colon annotations removed.
+
+    Each item starts a fresh matching scope, so text following a colon is
+    ignored only until the next ideographic comma.
+    """
+    return [
+        matchable
+        for item in _text(value).split("、")
+        if (matchable := item.split("：", 1)[0].strip())
+    ]
+
+
 def count_disease_items(answers: Mapping[str, Any] | Sequence[Any]) -> int:
     values = answers if isinstance(answers, Mapping) else dict(zip(DISEASE_HEADERS, answers))
-    return sum(keyword in _text(values.get(header)) for header, keywords in DISEASE_KEYWORDS.items() for keyword in keywords)
+    count = 0
+    for header, keywords in DISEASE_KEYWORDS.items():
+        segments = extract_disease_matchable_segments(values.get(header))
+        count += sum(any(keyword in segment for segment in segments) for keyword in keywords)
+    return count
 
 
 def calculate_question3_score(disease_count: int) -> int | None:
