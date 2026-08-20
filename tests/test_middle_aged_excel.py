@@ -36,10 +36,11 @@ class MiddleAgedExcelIntegrationTests(unittest.TestCase):
             root = Path(folder); source = root / "test_middle_aged_input.xlsx"
             records = []
             highest = self._valid_answers("最高分案例"); highest["年齡"] = 50; records.append(highest)
-            lowest = self._valid_answers("低分案例"); lowest.update({"年齡":55,Q1:"分數:0",Q21_OUTPUT:"很不好",Q22_OUTPUT:"很不好",Q4:"自己覺得完全不能工作",Q5:"100-365天",Q6:"不太可能",Q71:"從不",Q72:"從不",Q73:"從不",DISEASE_HEADERS[0]:"背部",DISEASE_HEADERS[1]:"類風濕性關節炎",DISEASE_HEADERS[2]:"高血壓",DISEASE_HEADERS[3]:"肺結核",DISEASE_HEADERS[4]:"精神疾病或嚴重心理健康問題"}); records.append(lowest)
+            lowest = self._valid_answers("低分案例"); lowest.update({"年齡":55,Q1:"分數:0",Q21_OUTPUT:"很不好",Q22_OUTPUT:"很不好",Q4:"自己覺得完全不能工作",Q5:"100~365天",Q6:"不太可能",Q71:"從不",Q72:"從不",Q73:"從不",DISEASE_HEADERS[0]:"背部",DISEASE_HEADERS[1]:"類風濕性關節炎",DISEASE_HEADERS[2]:"高血壓",DISEASE_HEADERS[3]:"肺結核",DISEASE_HEADERS[4]:"精神疾病或嚴重心理健康問題"}); records.append(lowest)
             missing = self._valid_answers("部分答案缺失"); missing.update({"年齡":60,Q21_OUTPUT:""}); records.append(missing)
             no_disease = self._valid_answers("完全沒有疾病案例"); no_disease["年齡"] = 45; records.append(no_disease)
             colon_case = self._valid_answers("冒號排除案例"); colon_case.update({"年齡":50,DISEASE_HEADERS[8]:"其他皮膚疾病：12、過敏性皮疹或紅斑、其他疹子：12"}); records.append(colon_case)
+            q5_contains = self._valid_answers("第5題延伸文字案例"); q5_contains.update({"年齡":50,Q5:"最近12個月健康問題請假：10~24天"}); records.append(q5_contains)
             headers = [*REQUIRED_HEADERS, Q21_OUTPUT, Q22_OUTPUT, "年齡"]
             self._write_source(source, headers, records); original = source.read_bytes(); logs=[]
             output = MiddleAgedAnalysis().run({"中高齡原稿":str(source)}, str(root), logs.append)
@@ -56,6 +57,11 @@ class MiddleAgedExcelIntegrationTests(unittest.TestCase):
             self.assertEqual(sheet.cell(6,39).value, "良")
             self.assertEqual(sheet.cell(6,40).value, "能勝任所從事的工作")
             self.assertEqual(sheet.cell(6,41).value, "支持其工作適能")
+            # Substring 10~24天 -> AI=3；10+10+7+6+3+7+4=47。
+            self.assertEqual(sheet.cell(7,35).value, 3); self.assertEqual(sheet.cell(7,38).value, 47)
+            self.assertEqual(sheet.cell(7,39).value, "優")
+            self.assertEqual(sheet.cell(7,40).value, "能很好地勝任所從事的工作")
+            self.assertEqual(sheet.cell(7,41).value, "維持其工作適能")
             for column in range(1, 42):
                 expected = "F2F2F2" if column <= 30 else "E2EFDA" if column <= 37 else "D9E1F2"
                 self.assertEqual(sheet.cell(1,column).fill.fgColor.rgb[-6:], expected)

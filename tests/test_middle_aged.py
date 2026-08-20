@@ -123,9 +123,17 @@ class MiddleAgedScoringTests(unittest.TestCase):
         self.assertIsNone(calculate_question4_score(""))
 
     def test_questions5_and6(self):
-        for answer, score in {"0天":5,"1-9天":4,"10-24天":3,"25-99天":2,"100-365天":1}.items(): self.assertEqual(calculate_question5_score(answer), score)
+        exact = {"0天":5,"1~9天":4,"10~24天":3,"25~99天":2,"100~365天":1}
+        for answer, score in exact.items():
+            self.assertEqual(calculate_question5_score(answer), score)
+        contains = {"請假天數：0天":5,"答案為1~9天":4,"最近12個月共10~24天":3,"選擇：25~99天（含）":2,"健康問題請假100~365天":1}
+        for answer, score in contains.items():
+            self.assertEqual(calculate_question5_score(answer), score)
+        for old_format in ("1-9天", "10-24天", "25-99天", "100-365天"):
+            self.assertIsNone(calculate_question5_score(old_format))
+        self.assertIsNone(calculate_question5_score("366天")); self.assertIsNone(calculate_question5_score("")); self.assertIsNone(calculate_question5_score(None))
         for answer, score in {"不太可能":1,"不確定":4,"應該可以":7}.items(): self.assertEqual(calculate_question6_score(answer), score)
-        self.assertIsNone(calculate_question5_score("366天")); self.assertIsNone(calculate_question6_score("可能"))
+        self.assertIsNone(calculate_question6_score("可能"))
 
     def test_question7_raw_boundaries(self):
         # Answers yielding raw totals 0,3,4,6,7,9,10,12.

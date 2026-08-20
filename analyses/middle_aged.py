@@ -64,7 +64,7 @@ QUESTION4_SCORE_MAP = {
     "有時候需放慢工作節奏或改變工作方式": 4, "經常需放慢工作節奏或改變工作方式": 3,
     "因為疾病，我覺得只能做兼職的工作": 2, "自己覺得完全不能工作": 1,
 }
-QUESTION5_SCORE_MAP = {"0天": 5, "1-9天": 4, "10-24天": 3, "25-99天": 2, "100-365天": 1}
+QUESTION5_SCORE_KEYWORDS = {"0天": 5, "1~9天": 4, "10~24天": 3, "25~99天": 2, "100~365天": 1}
 QUESTION6_SCORE_MAP = {"不太可能": 1, "不確定": 4, "應該可以": 7}
 QUESTION7_RAW_SCORE_MAP = {"總是": 4, "常常": 3, "有時": 2, "很少": 1, "從不": 0}
 LEVELS = (
@@ -163,7 +163,8 @@ def calculate_question4_score(answer: Any) -> int | None:
 
 
 def calculate_question5_score(answer: Any) -> int | None:
-    return QUESTION5_SCORE_MAP.get(_text(answer))
+    text = _text(answer)
+    return next((score for keyword, score in QUESTION5_SCORE_KEYWORDS.items() if keyword in text), None)
 
 
 def calculate_question6_score(answer: Any) -> int | None:
