@@ -37,26 +37,26 @@ OUTPUT_HEADERS = (
     "總分", "等級", "意義", "措施宗旨",
 )
 REQUIRED_HEADERS = (
-    "工號", "姓名", "性別", "廠別", "部門", "課別", Q1, Q21_SOURCE, Q22_SOURCE,
+    "工號", "姓名", "性別", "廠別", "部門", "課別", Q1,
     *DISEASE_HEADERS, Q4, Q5, Q6, Q71, Q72, Q73,
 )
 
 QUESTION2_SCORE_MAP = {"很好": 5, "好": 4, "普通": 3, "不好": 2, "很不好": 1}
 DISEASE_KEYWORDS = {
-    DISEASE_HEADERS[0]: ("背部", "手臂或手部", "腿或腳", "身體其他部位："),
-    DISEASE_HEADERS[1]: ("上背或頸椎的問題，重複發生的疼痛", "下背部的問題，重複發生的疼痛", "下背部的問題，從背部傳到腿部的疼痛（坐骨神經痛）", "肌肉骨骼問題影響到四肢 (手、腳)，重複發生的疼痛", "類風濕性關節炎", "其他肌肉骨骼問題"),
-    DISEASE_HEADERS[2]: ("高血壓", "冠狀動脈心臟病、運動時胸痛 (心絞痛)", "冠狀動脈血拴，心肌梗塞", "心臟功能不全", "其他心血管疾病"),
-    DISEASE_HEADERS[3]: ("反覆的呼吸道感染(包含扁桃腺炎、急性鼻竇炎、急性支氣管炎)", "慢性支氣管炎", "慢性鼻竇炎", "支氣管性氣喘", "肺氣腫", "肺結核", "其他呼吸系統疾病"),
-    DISEASE_HEADERS[4]: ("精神疾病或嚴重心理健康問題（如嚴重憂鬱症、心理困擾", "輕微心理疾病或問題（如輕微憂鬱、緊張、焦慮、失眠"),
-    DISEASE_HEADERS[5]: ("聽覺問題或傷害", "視覺疾病或傷害(不包括近視、遠視", "神經系統疾病 (如中風、神經痛、偏頭痛、癲癇)", "其他神經系統或感覺器官疾病"),
-    DISEASE_HEADERS[6]: ("膽結石或膽囊疾病", "肝臟或胰臟疾病", "胃潰瘍或十二指腸潰瘍", "胃炎或十二指腸不適", "大腸激躁，大腸炎", "其他消化器官疾病"),
-    DISEASE_HEADERS[7]: ("尿道感染", "腎臟疾病", "生殖系統疾病（如女性輸卵管感染或男性的前列腺感染", "其他泌尿生殖系統疾病"),
+    DISEASE_HEADERS[0]: ("背部", "手臂或手部", "腿或腳", "身體其他部位"),
+    DISEASE_HEADERS[1]: ("上背或頸椎的問題", "下背部的問題，重複發生的疼痛", "從背部傳到腿部的疼痛", "肌肉骨骼問題影響到四肢", "類風濕性關節炎", "其它肌肉骨骼問題"),
+    DISEASE_HEADERS[2]: ("高血壓", "冠狀動脈心臟病", "冠狀動脈血栓", "心臟功能不全", "其它心血管疾病"),
+    DISEASE_HEADERS[3]: ("反複的呼吸道感染", "慢性支氣管炎", "慢性鼻竇炎", "支氣管性氣喘", "肺氣腫", "肺結核", "其它呼吸系統疾病"),
+    DISEASE_HEADERS[4]: ("精神疾病或嚴重心理健康問題", "輕微心理疾病或問題"),
+    DISEASE_HEADERS[5]: ("聽覺問題或傷害", "視覺疾病或傷害", "神經系統疾病", "其他神經系統和感覺器官疾病"),
+    DISEASE_HEADERS[6]: ("膽結石或膽囊疾病", "肝臟或胰臟及疾病", "胃潰瘍或十二指腸潰瘍", "胃炎或十二指腸不適", "大腸激躁", "其他消化系統疾病"),
+    DISEASE_HEADERS[7]: ("尿道感染", "腎臟疾病", "生殖系統疾病", "其他生殖泌尿系統疾病"),
     DISEASE_HEADERS[8]: ("過敏性皮疹或紅斑", "其他疹子", "其他皮膚疾病"),
-    DISEASE_HEADERS[9]: ("良性腫瘤", "惡性腫瘤（癌症"),
-    DISEASE_HEADERS[10]: ("肥胖", "糖尿病", "甲狀腺腫大或其他甲狀腺疾病", "其他內分泌或代謝疾病"),
+    DISEASE_HEADERS[9]: ("良性腫瘤", "惡性腫瘤"),
+    DISEASE_HEADERS[10]: ("肥胖", "糖尿病", "甲狀腺腫大或其他甲狀腺疾病", "其它內分泌或代謝疾病"),
     DISEASE_HEADERS[11]: ("貧血", "其他血液問題"),
-    DISEASE_HEADERS[12]: ("先天缺陷，診斷名稱",),
-    DISEASE_HEADERS[13]: ("其他問題或疾病",),
+    DISEASE_HEADERS[12]: ("請寫出所有經醫師診治的先天缺陷診斷名稱",),
+    DISEASE_HEADERS[13]: ("請寫出所有經醫師診治的其他問題或疾病",),
 }
 QUESTION3_SCORE_MAP = {0: 7, 1: 5, 2: 4, 3: 3, 4: 2}
 QUESTION4_SCORE_MAP = {
@@ -77,6 +77,33 @@ LEVELS = (
 
 def _text(value: Any) -> str:
     return "" if value is None else str(value).strip()
+
+
+def _excel_column_name(index: int) -> str:
+    name = ""
+    while index:
+        index, remainder = divmod(index - 1, 26)
+        name = chr(65 + remainder) + name
+    return name
+
+
+def find_unique_header_containing(
+    headers: Sequence[str], keyword: str, log: LogCallback = lambda _: None,
+) -> str:
+    """Return the sole header containing keyword, never guessing duplicates."""
+    matches = [(index, header) for index, header in enumerate(headers, 1) if keyword in header]
+    if not matches:
+        raise AnalysisError(f"找不到包含「{keyword}」的表頭。")
+    if len(matches) > 1:
+        log(f"偵測到多個包含「{keyword}」的表頭：")
+        for index, header in matches:
+            log(f"{_excel_column_name(index)}欄：{header}")
+        raise AnalysisError(
+            "偵測到多個包含以下文字的表頭：\n\n"
+            f"「{keyword}」\n\n"
+            "為避免使用錯誤欄位，請確認原始 Excel 表頭。"
+        )
+    return matches[0][1]
 
 
 def calculate_roc_age(birth_date: Any, exam_date: Any) -> int | None:
@@ -160,7 +187,10 @@ def _log_invalid(log: LogCallback, row_number: int, question: str, value: Any) -
     log(f"第 {row_number} 列：第 {question} 題答案無法辨識：{_text(value)}")
 
 
-def _build_output_row(row: Mapping[str, Any], row_number: int, use_direct_age: bool, log: LogCallback) -> list[Any]:
+def _build_output_row(
+    row: Mapping[str, Any], row_number: int, use_direct_age: bool,
+    question_21_header: str, question_22_header: str, log: LogCallback,
+) -> list[Any]:
     if use_direct_age:
         age_number = safe_number(row.get("年齡"))
         age = int(age_number) if age_number is not None and age_number.is_integer() and 0 <= age_number <= 150 else None
@@ -172,14 +202,14 @@ def _build_output_row(row: Mapping[str, Any], row_number: int, use_direct_age: b
             log(f"第 {row_number} 列：出生日期或體檢日期無法解析，年齡無法計算。")
 
     q1 = extract_question1_score(row.get(Q1))
-    q2 = calculate_question2_score(row.get(Q21_SOURCE), row.get(Q22_SOURCE))
+    q2 = calculate_question2_score(row.get(question_21_header), row.get(question_22_header))
     disease_answers = {header: row.get(header) for header in DISEASE_HEADERS}
     q3 = calculate_question3_score(count_disease_items(disease_answers))
     q4 = calculate_question4_score(row.get(Q4))
     q5 = calculate_question5_score(row.get(Q5))
     q6 = calculate_question6_score(row.get(Q6))
     q7 = calculate_question7_score(row.get(Q71), row.get(Q72), row.get(Q73))
-    for question, score, value in (("1", q1, row.get(Q1)), ("2", q2, f"{_text(row.get(Q21_SOURCE))} / {_text(row.get(Q22_SOURCE))}"), ("4", q4, row.get(Q4)), ("5", q5, row.get(Q5)), ("6", q6, row.get(Q6)), ("7", q7, f"{_text(row.get(Q71))} / {_text(row.get(Q72))} / {_text(row.get(Q73))}")):
+    for question, score, value in (("1", q1, row.get(Q1)), ("2", q2, f"{_text(row.get(question_21_header))} / {_text(row.get(question_22_header))}"), ("4", q4, row.get(Q4)), ("5", q5, row.get(Q5)), ("6", q6, row.get(Q6)), ("7", q7, f"{_text(row.get(Q71))} / {_text(row.get(Q72))} / {_text(row.get(Q73))}")):
         if score is None:
             _log_invalid(log, row_number, question, value)
     total = calculate_total_score(q1, q2, q3, q4, q5, q6, q7)
@@ -188,7 +218,7 @@ def _build_output_row(row: Mapping[str, Any], row_number: int, use_direct_age: b
     raw = [row.get(key) for key in ("工號", "姓名", "性別")]
     raw += [age]
     raw += [row.get(key) for key in ("廠別", "部門", "課別")]
-    raw += [q1, row.get(Q21_SOURCE), row.get(Q22_SOURCE)]
+    raw += [q1, row.get(question_21_header), row.get(question_22_header)]
     raw += [row.get(header) for header in DISEASE_HEADERS]
     raw += [row.get(key) for key in (Q4, Q5, Q6, Q71, Q72, Q73)]
     return raw + [q1, q2, q3, q4, q5, q6, q7, total, calculate_work_ability_level(total), calculate_work_ability_meaning(total), calculate_work_ability_measure(total)]
@@ -208,6 +238,8 @@ class MiddleAgedAnalysis(BaseAnalysis):
         source_path = validate_excel_input(source, "中高齡原稿")
         output_path = validate_output_directory(output_dir)
         headers, rows = read_active_sheet(source_path)
+        question_21_header = find_unique_header_containing(headers, Q21_SOURCE, log)
+        question_22_header = find_unique_header_containing(headers, Q22_SOURCE, log)
         missing = [header for header in REQUIRED_HEADERS if header not in headers]
         if "年齡" not in headers:
             missing.extend(header for header in ("出生日期", "體檢日期") if header not in headers)
@@ -216,7 +248,10 @@ class MiddleAgedAnalysis(BaseAnalysis):
         log(f"總資料筆數：{len(rows)}")
         output_rows = []
         for row_number, row in enumerate(rows, 2):
-            output_rows.append(_build_output_row(row, row_number, "年齡" in headers, log))
+            output_rows.append(_build_output_row(
+                row, row_number, "年齡" in headers,
+                question_21_header, question_22_header, log,
+            ))
             progress(len(output_rows), len(rows))
         target = unique_output_path(output_path, "中高齡")
         return write_analysis_workbook(

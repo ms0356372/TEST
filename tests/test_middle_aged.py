@@ -1,12 +1,12 @@
 import tempfile
 import unittest
 from analyses.middle_aged import (
-    DISEASE_HEADERS, DISEASE_KEYWORDS, OUTPUT_HEADERS, calculate_question2_score,
+    DISEASE_HEADERS, DISEASE_KEYWORDS, OUTPUT_HEADERS, Q21_SOURCE, Q22_SOURCE, calculate_question2_score,
     calculate_question3_score, calculate_question4_score, calculate_question5_score,
     calculate_question6_score, calculate_question7_score, calculate_roc_age,
     calculate_total_score, calculate_work_ability_level, calculate_work_ability_meaning,
     calculate_work_ability_measure, count_disease_items, extract_question1_score,
-    MiddleAgedAnalysis,
+    MiddleAgedAnalysis, find_unique_header_containing,
 )
 from core.exceptions import AnalysisError
 
@@ -38,6 +38,37 @@ class MiddleAgedScoringTests(unittest.TestCase):
         for first, second, expected in cases:
             self.assertEqual(calculate_question2_score(first, second), expected)
         self.assertIsNone(calculate_question2_score("", "很好"))
+
+    def test_unique_contains_header_matching(self):
+        for keyword in (Q21_SOURCE, Q22_SOURCE):
+            self.assertEqual(find_unique_header_containing([keyword], keyword), keyword)
+            extended = keyword + "(延伸說明文字)"
+            self.assertEqual(find_unique_header_containing(["工號", extended], keyword), extended)
+            with self.assertRaisesRegex(AnalysisError, f"找不到包含「{keyword}」的表頭"):
+                find_unique_header_containing(["工號", "姓名"], keyword)
+            logs = []
+            with self.assertRaisesRegex(AnalysisError, "偵測到多個包含以下文字的表頭"):
+                find_unique_header_containing(["工號", keyword + "(A)", keyword + "(B)"], keyword, logs.append)
+            self.assertTrue(any("B欄" in message and "(A)" in message for message in logs))
+            self.assertTrue(any("C欄" in message and "(B)" in message for message in logs))
+
+    def test_updated_keyword_substrings_and_duplicates(self):
+        cases = [
+            (0, "身體其他部位：肩膀", 1),
+            (1, "上背或頸椎的問題，重複發生的疼痛", 1),
+            (1, "疼痛是從背部傳到腿部的疼痛（坐骨神經痛）", 1),
+            (2, "冠狀動脈心臟病、運動時胸痛...", 1),
+            (6, "大腸激躁，大腸炎", 1),
+            (9, "惡性腫瘤（癌症）", 1),
+            (12, "請寫出所有經醫師診治的先天缺陷診斷名稱：甲、乙", 1),
+            (13, "請寫出所有經醫師診治的其他問題或疾病：甲、乙", 1),
+        ]
+        for index, answer, expected in cases:
+            with self.subTest(header=DISEASE_HEADERS[index]):
+                self.assertEqual(count_disease_items({DISEASE_HEADERS[index]: answer}), expected)
+        cardiovascular = DISEASE_HEADERS[2]
+        self.assertEqual(count_disease_items({cardiovascular: "高血壓；高血壓"}), 1)
+        self.assertEqual(count_disease_items({cardiovascular: "高血壓；冠狀動脈心臟病"}), 2)
 
     def test_every_disease_keyword_group_and_no_duplicate_count(self):
         for header, keywords in DISEASE_KEYWORDS.items():
