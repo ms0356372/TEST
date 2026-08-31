@@ -4,3 +4,5 @@ __pycache__/
 build/
 dist/
 *.spec
+# 測試活頁簿是二進位檔，避免 PR 系統拒絕；請用產生器重建。
+test_input.xlsx
