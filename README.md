@@ -40,6 +40,12 @@ python generate_test_excel.py
 
 完整過程與 EXE 大小記錄在 `build_log.txt`。正常啟動 EXE 時會先即時顯示啟動檢查，再開啟主畫面。
 
+`build_exe.bat` 現在只負責可靠地尋找 `py -3` 或 `python`，實際建置由
+`build_windows.py` 執行。所有子程序輸出會同步顯示並寫入 Log；成功或失敗後
+BAT 都會停在 `pause`，不會再發生雙擊後視窗直接消失。舊 release 會先移除，
+只有新 EXE 的 Self Test 通過後才重新建立 release。若建置失敗，請開啟專案
+根目錄的 `build_log.txt` 查看明確的失敗階段。
+
 ## 模組
 
 - `main.py`：GUI / `--self-test` 入口。
@@ -49,3 +55,4 @@ python generate_test_excel.py
 - `rule_manager.py`：有序規則驗證、JSON 匯入匯出。
 - `self_check.py`、`logger.py`、`version.py`：健康檢查、日誌、版本。
 - `generate_test_excel.py`：重建人工驗證用 `test_input.xlsx`，避免 PR 夾帶二進位檔。
+- `build_windows.py`：可記錄、可診斷的 Windows PyInstaller 建置與 EXE 驗證流程。
