@@ -1,40 +1,42 @@
 @echo off
+setlocal EnableExtensions
 cd /d "%~dp0"
-
-echo Checking Python...
-py --version
-if errorlevel 1 goto NO_PYTHON
-
-echo Installing requirements...
-if exist requirements.txt py -m pip install -r requirements.txt
-
-echo Installing PyInstaller...
-py -m pip install pyinstaller
-
-echo Cleaning old files...
-if exist build rmdir /s /q build
-if exist dist rmdir /s /q dist
-
-echo Building EXE...
-py -m PyInstaller --onefile --noconsole --clean --name ExcelHealthTool main.py
-
-if errorlevel 1 goto BUILD_ERROR
-
+chcp 65001 >nul 2>nul
+color 07
+cls
+echo ========================================
+echo Excel Transform Tool - Windows EXE Build
+echo ========================================
 echo.
-echo BUILD SUCCESS
-echo EXE: dist\ExcelHealthTool.exe
+
+set "PYTHON_CMD="
+where py >nul 2>nul
+if not errorlevel 1 set "PYTHON_CMD=py -3"
+if not defined PYTHON_CMD (
+    where python >nul 2>nul
+    if not errorlevel 1 set "PYTHON_CMD=python"
+)
+
+if not defined PYTHON_CMD (
+    echo [FAILED] Python was not found.
+    echo Please install Python 3.13 or a compatible version.
+    echo.
+    pause
+    exit /b 1
+)
+
+%PYTHON_CMD% build_windows.py
+set "BUILD_EXIT=%ERRORLEVEL%"
+echo.
+if not "%BUILD_EXIT%"=="0" (
+    echo ========================================
+    echo BUILD FAILED - see build_log.txt
+    echo ========================================
+) else (
+    echo ========================================
+    echo BUILD SUCCESS
+    echo ========================================
+)
 echo.
 pause
-exit /b 0
-
-:NO_PYTHON
-echo.
-echo Python launcher "py" was not found.
-pause
-exit /b 1
-
-:BUILD_ERROR
-echo.
-echo BUILD FAILED
-pause
-exit /b 1
+exit /b %BUILD_EXIT%
